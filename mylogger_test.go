@@ -2,10 +2,21 @@ package mylogger_test
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/juparave/mylogger"
 )
+
+func removeColorCodes(s string) string {
+	// Remove color codes from the string
+	for _, c := range []string{"\x1b[2m", "\x1b[92m", "\x1b[93m", "\x1b[91m", "\x1b[0m"} {
+		s = strings.ReplaceAll(s, c, "")
+	}
+	return s
+}
 
 func TestLogging(t *testing.T) {
 	// Create buffers to capture output
@@ -16,21 +27,27 @@ func TestLogging(t *testing.T) {
 	logger := mylogger.NewLoggerBuffers(&stdOut, &errOut)
 
 	// Log some messages
-	logger.Debug("Debug message")
 	logger.Info("Info message")
+	logger.Debug("Debug message")
 	logger.Warn("Warning message")
 	logger.Error("Error message")
 
+	// date and time
+	now := time.Now().Format("2006/01/02 15:04:05")
+
 	// Check if the log output contains the expected messages
-	expected := "Debug message\nInfo message"
+	expected := fmt.Sprintf("%s INF Info message\n%s DBG Debug message\n", now, now)
 	actual := stdOut.String()
+	actual = removeColorCodes(actual)
+	// remove color codes
 	if expected != actual {
 		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
 	}
 
 	// Check if the log output contains the expected messages
-	expected = "Warning message\nError message"
+	expected = fmt.Sprintf("%s WRN mylogger_test.go:32 Warning message\n%s ERR mylogger_test.go:33 Error message\n", now, now)
 	actual = errOut.String()
+	actual = removeColorCodes(actual)
 	if expected != actual {
 		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
 	}
@@ -48,25 +65,31 @@ func TestCustomLogging(t *testing.T) {
 	logger.Info("User logged in", "username", "john_doe", "ip", "192.168.1.1")
 	logger.Error("Failed to connect to database", "error", "connection refused")
 
+	// date and time
+	now := time.Now().Format("2006/01/02 15:04:05")
+
 	// Check if the log output contains the expected messages
-	expected := "User logged in username=john_doe ip=192.168.1.1\n"
+	expected := fmt.Sprintf("%s INF User logged in username=john_doe ip=192.168.1.1\n", now)
 	actual := stdOut.String()
+	actual = removeColorCodes(actual)
 	if expected != actual {
 		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
 	}
 
-	expected = "Failed to connect to database error=connection refused\n"
+	expected = fmt.Sprintf("%s ERR mylogger_test.go:66 Failed to connect to database error=\"connection refused\"\n", now)
 	actual = errOut.String()
+	actual = removeColorCodes(actual)
 	if expected != actual {
 		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
 	}
 }
 
-func Example() {
+func example() {
 	// Create a new logger
 	logger := mylogger.NewLogger()
 
 	// Log some messages
+	fmt.Println("\nLogging messages...")
 	logger.Info("This is an informational message")
 	logger.Warn("This is a warning message")
 	logger.Error("This is an error message")

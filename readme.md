@@ -26,9 +26,9 @@ func main() {
 
 	// Log some messages
 	logger.Info("This is an informational message")
+    logger.Debug("This is a debug message")
 	logger.Warn("This is a warning message")
 	logger.Error("This is an error message")
-	logger.Debug("This is a debug message")
 }
 ```
 
@@ -52,9 +52,9 @@ func main() {
 
 	// Log some messages
 	logger.Info("This is an informational message")
+    logger.Debug("This is a debug message")
 	logger.Warn("This is a warning message")
 	logger.Error("This is an error message")
-	logger.Debug("This is a debug message")
 
 	// Check the output captured in buffers
 	println("Standard output:", stdOut.String())
@@ -65,5 +65,3 @@ func main() {
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-

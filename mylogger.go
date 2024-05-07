@@ -23,6 +23,11 @@ func (l *MyLogger) Info(msg string, keyvals ...interface{}) {
 	l.stdLogger.Info(msg, keyvals...)
 }
 
+// Debug logs a debug message.
+func (l *MyLogger) Debug(msg string, keyvals ...interface{}) {
+	l.stdLogger.Debug(msg, keyvals...)
+}
+
 // Error logs an error message.
 func (l *MyLogger) Error(msg string, keyvals ...interface{}) {
 	// Access caller information (requires runtime package)
@@ -34,11 +39,6 @@ func (l *MyLogger) Error(msg string, keyvals ...interface{}) {
 		msg = fmt.Sprintf("%s:%d %s", file, line, msg)
 	}
 	l.errLogger.Error(msg, keyvals...)
-}
-
-// Debug logs a debug message.
-func (l *MyLogger) Debug(msg string, keyvals ...interface{}) {
-	l.stdLogger.Debug(msg, keyvals...)
 }
 
 // Warn logs a warning message.
