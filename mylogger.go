@@ -53,6 +53,22 @@ func (l *MyLogger) Warn(msg string, keyvals ...interface{}) {
 	l.errLogger.Warn(msg, keyvals...)
 }
 
+func (l *MyLogger) WarnWithStack(msg string, keyvals ...interface{}) {
+	buffer := make([]byte, 1<<16)
+	stackSize := runtime.Stack(buffer, true)
+	stack := string(buffer[:stackSize])
+	pc, _, _, ok := runtime.Caller(1)
+	if ok {
+		file, line := runtime.FuncForPC(pc).FileLine(pc)
+		// ommit the full path of the file
+		file = file[strings.LastIndex(file, "/")+1:]
+		msg = fmt.Sprintf("%s:%d %s", file, line, msg)
+	}
+	l.errLogger.Warn(msg, keyvals...)
+
+	fmt.Println(stack)
+}
+
 // NewLogger creates a new instance of MyLogger.
 func NewLogger() *MyLogger {
 	// Initialize error logger

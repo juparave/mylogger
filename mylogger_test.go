@@ -84,6 +84,29 @@ func TestCustomLogging(t *testing.T) {
 	}
 }
 
+func TestWithStack(t *testing.T) {
+	// Create buffers to capture output
+	var stdOut bytes.Buffer
+	var errOut bytes.Buffer
+
+	// Create a new logger with the buffer as output
+	logger := mylogger.NewLoggerBuffers(&stdOut, &errOut)
+
+	// Log some messages with stack trace
+	logger.WarnWithStack("Something went wrong")
+
+	// date and time
+	now := time.Now().Format("2006/01/02 15:04:05")
+
+	// Check if the log output contains the expected messages
+	expected := fmt.Sprintf("%s WRN mylogger_test.go:96 Something went wrong", now)
+	actual := errOut.String()
+	actual = removeColorCodes(actual)
+	if !strings.HasPrefix(actual, expected) {
+		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
+	}
+}
+
 func example() {
 	// Create a new logger
 	logger := mylogger.NewLogger()
@@ -93,9 +116,14 @@ func example() {
 	logger.Info("This is an informational message")
 	logger.Warn("This is a warning message")
 	logger.Error("This is an error message")
+	logger.WarnWithStack("This is a warning message with stack trace")
 
 	// Output:
 	// This is an informational message
 	// This is a warning message
 	// This is an error message
+	// This is a warning message with stack trace
+	// goroutine 1 [running]:
+	// runtime/debug.Stack(0xc0000a0000, 0x10000, 0x10000)
+	// ...
 }
