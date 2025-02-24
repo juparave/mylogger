@@ -3,6 +3,7 @@ package mylogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -12,10 +13,14 @@ import (
 	"github.com/lmittmann/tint"
 )
 
+// Set the LOG_LEVEL environment variable to the desired log level (e.g.,
+// DEBUG, INFO, WARN, ERROR) before running your application.
+
 // MyLogger represents a customized logger with separate streams for standard output and errors.
 type MyLogger struct {
 	stdLogger *slog.Logger // Standard output logger
 	errLogger *slog.Logger // Error output logger
+	level     slog.Level
 }
 
 // Info logs an informational message.
@@ -53,6 +58,7 @@ func (l *MyLogger) Warn(msg string, keyvals ...interface{}) {
 	l.errLogger.Warn(msg, keyvals...)
 }
 
+// WarnWithStack logs a warning message with stack trace.
 func (l *MyLogger) WarnWithStack(msg string, keyvals ...interface{}) {
 	buffer := make([]byte, 1<<16)
 	stackSize := runtime.Stack(buffer, true)
@@ -69,31 +75,37 @@ func (l *MyLogger) WarnWithStack(msg string, keyvals ...interface{}) {
 	fmt.Println(stack)
 }
 
+// SetLevel sets the log level.
+func (l *MyLogger) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= l.level.Level()
+}
+
 // NewLogger creates a new instance of MyLogger.
 func NewLogger() *MyLogger {
+	logLevel := os.Getenv("LOG_LEVEL")
+	var level slog.Level
+	switch strings.ToUpper(logLevel) {
+	case "DEBUG":
+		level = slog.LevelDebug
+	case "INFO":
+		level = slog.LevelInfo
+	case "WARN":
+		level = slog.LevelWarn
+	case "ERROR":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
 	// Initialize error logger
 	errLogger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-		Level:      slog.LevelWarn,
+		Level:      level, // Log warnings and errors
 		TimeFormat: "2006/01/02 15:04:05",
-		// AddSource:  true,
-		// ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-		// 	fmt.Println(groups)
-		// 	if attr.Key == slog.SourceKey {
-		// 		// Access caller information (requires runtime package)
-		// 		pc, _, _, ok := runtime.Caller(2)
-		// 		if ok {
-		// 			file, line := runtime.FuncForPC(pc).FileLine(pc)
-		// 			attr = slog.String("s", fmt.Sprintf("%s:%d", file, line))
-		// 		}
-		// 	}
-		// 	return attr
-		// },
-		// NoColor: true,
 	}))
 
 	// Initialize standard output logger
 	stdLogger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
-		Level:      slog.LevelDebug, // Log debug, info
+		Level:      level, // Log debug, info
 		TimeFormat: "2006/01/02 15:04:05",
 	}))
 
@@ -101,34 +113,37 @@ func NewLogger() *MyLogger {
 	return &MyLogger{
 		errLogger: errLogger,
 		stdLogger: stdLogger,
+		level:     level,
 	}
 }
 
 // NewLoggerBuffers creates a new instance of MyLogger with the specified output buffers.
 // This function is useful for testing purposes.
 func NewLoggerBuffers(stdOut, errOut *bytes.Buffer) *MyLogger {
+	logLevel := os.Getenv("LOG_LEVEL")
+	var level slog.Level
+	switch strings.ToUpper(logLevel) {
+	case "DEBUG":
+		level = slog.LevelDebug
+	case "INFO":
+		level = slog.LevelInfo
+	case "WARN":
+		level = slog.LevelWarn
+	case "ERROR":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
 	// Initialize error logger
 	errLogger := slog.New(tint.NewHandler(errOut, &tint.Options{
-		Level:      slog.LevelWarn, // Log warnings and errors
+		Level:      level, // Log warnings and errors
 		TimeFormat: "2006/01/02 15:04:05",
-		// AddSource:  true, // Include source file and line number
-		// ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-		// 	fmt.Println(groups)
-		// 	if attr.Key == slog.SourceKey {
-		// 		// Access caller information (requires runtime package)
-		// 		pc, _, _, ok := runtime.Caller(4)
-		// 		if ok {
-		// 			file, line := runtime.FuncForPC(pc).FileLine(pc)
-		// 			attr = slog.String("s", fmt.Sprintf("%s:%d", file, line))
-		// 		}
-		// 	}
-		// 	return attr
-		// },
 	}))
 
 	// Initialize standard output logger
 	stdLogger := slog.New(tint.NewHandler(stdOut, &tint.Options{
-		Level:      slog.LevelDebug, // Log debug, info, warnings, and errors
+		Level:      level, // Log debug, info
 		TimeFormat: "2006/01/02 15:04:05",
 	}))
 
@@ -136,5 +151,6 @@ func NewLoggerBuffers(stdOut, errOut *bytes.Buffer) *MyLogger {
 	return &MyLogger{
 		errLogger: errLogger,
 		stdLogger: stdLogger,
+		level:     level,
 	}
 }

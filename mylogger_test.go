@@ -3,6 +3,7 @@ package mylogger_test
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +19,44 @@ func removeColorCodes(s string) string {
 	return s
 }
 
+func TestInfoLog(t *testing.T) {
+	// Set the log level to INFO
+	os.Setenv("LOG_LEVEL", "INFO")
+
+	// Create buffers to capture output
+	var stdOut bytes.Buffer
+	var errOut bytes.Buffer
+
+	// Create a new logger with the buffer as output
+	logger := mylogger.NewLoggerBuffers(&stdOut, &errOut)
+
+	// Log some messages
+	logger.Info("User logged in", "username", "john_doe", "ip", "192.168.1.1")
+	logger.Error("Failed to connect to database", "error", "connection refused")
+
+	// Date and time for log messages
+	now := time.Now().Format("2006/01/02 15:04:05")
+
+	// Check if the log output contains the expected messages
+	expected := fmt.Sprintf("%s INF User logged in username=john_doe ip=192.168.1.1\n", now)
+	actual := stdOut.String()
+	actual = removeColorCodes(actual)
+	if expected != actual {
+		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
+	}
+
+	expected = fmt.Sprintf("%s ERR mylogger_test.go:35 Failed to connect to database error=\"connection refused\"\n", now)
+	actual = errOut.String()
+	actual = removeColorCodes(actual)
+	if expected != actual {
+		t.Errorf("Expected log output:\n'%s'\nActual log output:\n'%s'", expected, actual)
+	}
+}
+
 func TestLogging(t *testing.T) {
+	// Set the log level to DEBUG
+	os.Setenv("LOG_LEVEL", "DEBUG")
+
 	// Create buffers to capture output
 	var stdOut bytes.Buffer
 	var errOut bytes.Buffer
@@ -45,7 +83,45 @@ func TestLogging(t *testing.T) {
 	}
 
 	// Check if the log output contains the expected messages
-	expected = fmt.Sprintf("%s WRN mylogger_test.go:32 Warning message\n%s ERR mylogger_test.go:33 Error message\n", now, now)
+	expected = fmt.Sprintf("%s WRN mylogger_test.go:70 Warning message\n%s ERR mylogger_test.go:71 Error message\n", now, now)
+	actual = errOut.String()
+	actual = removeColorCodes(actual)
+	if expected != actual {
+		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
+	}
+}
+
+func TestLoggingInfoLevel(t *testing.T) {
+	// Set the log level to INFO
+	os.Setenv("LOG_LEVEL", "INFO")
+
+	// Create buffers to capture output
+	var stdOut bytes.Buffer
+	var errOut bytes.Buffer
+
+	// Create a new logger with the buffer as output
+	logger := mylogger.NewLoggerBuffers(&stdOut, &errOut)
+
+	// Log some messages
+	logger.Info("Info message")
+	logger.Debug("Debug message")
+	logger.Warn("Warning message")
+	logger.Error("Error message")
+
+	// date and time
+	now := time.Now().Format("2006/01/02 15:04:05")
+
+	// Check if the log output contains the expected messages
+	expected := fmt.Sprintf("%s INF Info message\n", now)
+	actual := stdOut.String()
+	actual = removeColorCodes(actual)
+	// remove color codes
+	if expected != actual {
+		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
+	}
+
+	// Check if the log output contains the expected messages
+	expected = fmt.Sprintf("%s WRN mylogger_test.go:108 Warning message\n%s ERR mylogger_test.go:109 Error message\n", now, now)
 	actual = errOut.String()
 	actual = removeColorCodes(actual)
 	if expected != actual {
@@ -76,7 +152,7 @@ func TestCustomLogging(t *testing.T) {
 		t.Errorf("Expected log output:\n%s\nActual log output:\n%s", expected, actual)
 	}
 
-	expected = fmt.Sprintf("%s ERR mylogger_test.go:66 Failed to connect to database error=\"connection refused\"\n", now)
+	expected = fmt.Sprintf("%s ERR mylogger_test.go:142 Failed to connect to database error=\"connection refused\"\n", now)
 	actual = errOut.String()
 	actual = removeColorCodes(actual)
 	if expected != actual {
@@ -99,7 +175,7 @@ func TestWithStack(t *testing.T) {
 	now := time.Now().Format("2006/01/02 15:04:05")
 
 	// Check if the log output contains the expected messages
-	expected := fmt.Sprintf("%s WRN mylogger_test.go:96 Something went wrong", now)
+	expected := fmt.Sprintf("%s WRN mylogger_test.go:172 Something went wrong", now)
 	actual := errOut.String()
 	actual = removeColorCodes(actual)
 	if !strings.HasPrefix(actual, expected) {

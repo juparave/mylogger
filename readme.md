@@ -1,6 +1,6 @@
 # mylogger
 
-`mylogger` is a simple logging utility for Go projects. Using go's `slog` but
+`mylogger` is a simple logging utility for Go projects. Using Go's `slog` but
 with separated outputs for `stdout` and `stderr`.
 
 ## Installation
@@ -60,6 +60,20 @@ func main() {
 	println("Standard output:", stdOut.String())
 	println("Error output:", errOut.String())
 }
+```
+
+## Setting the Log Level
+You can set the log level by using the LOG_LEVEL environment variable. The available log levels are:
+
+* DEBUG: Logs all messages.
+* INFO: Logs informational, warning, and error messages.
+* WARN: Logs warning and error messages.
+* ERROR: Logs only error messages.
+
+To set the log level, use the following command before running your application:
+
+```bash
+export LOG_LEVEL=DEBUG
 ```
 
 ## License
